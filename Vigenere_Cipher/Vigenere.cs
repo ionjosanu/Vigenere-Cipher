@@ -17,55 +17,49 @@ namespace Vigenere_Cipher
             Key = keyword;
         }
 
-        public string KeyGenerator(string text, string key)
+        private string Cipher(string input, string key, bool encipher)
         {
-            int x = key.Length;
-            for (int i = 0; i <= x; i++)
+            for (int i = 0; i < key.Length; ++i)
+                if (!char.IsLetter(key[i]))
+                    return null; // Error
+
+            string output = string.Empty;
+            int nonAlphaCharCount = 0;
+
+            for (int i = 0; i < input.Length; ++i)
             {
-                if (i == x)
-                    i = 0;
-                if (key.Length == text.Length)
-                    break;
-                key += (key[i]);
+                if (char.IsLetter(input[i]))
+                {
+                    bool cIsUpper = char.IsUpper(input[i]);
+                    char offset = cIsUpper ? 'A' : 'a';
+                    int keyIndex = (i - nonAlphaCharCount) % key.Length;
+                    int k = (cIsUpper ? char.ToUpper(key[keyIndex]) : char.ToLower(key[keyIndex])) - offset;
+                    k = encipher ? k : -k;
+                    char ch = (char)((Modulus(((input[i] + k) - offset), 26)) + offset);
+                    output += ch;
+                }
+                else
+                {
+                    output += input[i];
+                    ++nonAlphaCharCount;
+                }
             }
-            return key;
+
+            return output;
         }
 
         public string Encrypt()
         {
-            Key = KeyGenerator(Text, Key);
-            string EncryptedText = "";
-            int letter;
-            for (int i = 0; i < Text.Length; i++)
-            {
-                if (Char.IsLetter(Text[i]))
-                {
-                    letter = ((Text[i]) + Key[i]) % 26;
-                    letter += 'A';
-                    EncryptedText += (char)(letter);
-                }
-                else
-                    EncryptedText += Text[i];
-            }
-            return EncryptedText;
+            return Cipher(Text, Key, true);
         }
 
-        public string Decrypt(string text)
+        public string Decrypt(string encriptedText)
         {
-            string DecryptedText = "";
-            int letter;
-            for (int i = 0; i < text.Length && i < Key.Length; i++)
-            {
-                if (Char.IsLetter(text[i]))
-                {
-                    letter = (text[i] - Key[i] + 26) % 26;
-                    letter += 'A';
-                    DecryptedText += (char)(letter);
-                }
-                else
-                    DecryptedText += text[i];
-            }
-            return DecryptedText;
+            return Cipher(encriptedText, Key, false);
+        }
+        private static int Modulus(int a, int b)
+        {
+            return (a % b + b) % b;
         }
     }
 }
